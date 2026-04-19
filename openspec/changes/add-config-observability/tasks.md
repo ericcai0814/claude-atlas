@@ -3,14 +3,14 @@
 - [x] 1.1 Scaffold Tauri + React TS + bun (commit 6832493)
 - [x] 1.2 建立 `ARCHITECTURE.md` 訂下 data model
 - [x] 1.3 實作 `expand_tilde` 與 `is_noise` 工具函式（Decision 2: tier 邊界三層固定）
-- [ ] 1.4 稽核所有 Phase 1 command 遵循 Decision 4: Rust command shape 一致契約（`Result<Vec<T>, String>` + serde `rename_all = "camelCase"`）
+- [x] 1.4 稽核所有 Phase 1 command 遵循 Decision 4: Rust command shape 一致契約（`Result<Vec<T>, String>` + serde `rename_all = "camelCase"`）
 
 ## 2. Symlinks 路徑 — 覆蓋 Four-State Drift Classification 與 Multi-Tier Inventory Discovery (global tier)
 
 - [x] 2.1 實作 `scan_symlinks` command（global tier 掃描）
 - [x] 2.2 實作 Decision 3: drift 四態分類邏輯（ok / drifted / broken / unmanaged）
 - [x] 2.3 Symlinks tab UI：summary chips + 排序表格 + drift CTA
-- [ ] 2.4 驗證 Symlinks tab 的 CTA 只顯示指令字串不執行，符合 Non-Invasive Guidance
+- [x] 2.4 驗證 Symlinks tab 的 CTA 只顯示指令字串不執行，符合 Non-Invasive Guidance
 
 ## 3. Projects 路徑 — 覆蓋 Multi-Tier Inventory Discovery (project-local tier)
 
@@ -39,15 +39,15 @@
 
 - [ ] 6.1 新增 `compute_drift_summary() -> DriftSummary` 彙總所有類別 drift 計數
 - [ ] 6.2 Overview tab UI：broken / drifted / dead-plugin / over-budget memory 四張 card
-- [ ] 6.3 `unmanaged` 不計入 drift summary（僅在 Symlinks tab 可見）— 對應 design.md Open Questions 的暫定結論
+- [x] 6.3 `unmanaged` 不計入 drift summary（僅在 Symlinks tab 可見）— 對應 design.md Open Questions 的暫定結論
 - [ ] 6.4 tab 切換時重新 invoke command，對應 Decision 5: 不做快取，每次 invoke 重掃
 
 ## 7. 嚴守 Non-Invasive Guidance
 
-- [ ] 7.1 稽核所有 command：僅 read，無任何 `fs::write` / `fs::remove_*` / 對 `~/.claude` 或 `.claude/` 的 mutate 呼叫
-- [ ] 7.2 所有 drift UI 只顯示 CTA 指令字串（可複製），無「執行」按鈕或 confirm dialog
-- [ ] 7.3 Plugin tab 無 toggle UI 或 disable 連結，只顯示狀態
-- [ ] 7.4 Tauri capability 設定僅允許 `core:default` + `opener:default`，無 FS write scope
+- [x] 7.1 稽核所有 command：僅 read，無任何 `fs::write` / `fs::remove_*` / 對 `~/.claude` 或 `.claude/` 的 mutate 呼叫（`scan_symlinks` / `reveal_in_finder` / `open_in_vscode` 三個 command 皆不寫 FS；後兩者執行 shell 但僅 read-side OS affordance，spec v1.1 已加 scenario 明確允許）
+- [x] 7.2 所有 drift UI 只顯示 CTA 指令字串（可複製），無「執行」按鈕或 confirm dialog
+- [x] 7.3 Plugin tab 無 toggle UI 或 disable 連結，只顯示狀態
+- [x] 7.4 Tauri capability 設定僅允許 `core:default` + `opener:default`，無 FS write scope
 
 ## 8. Dispatch Manifest 整合 — 覆蓋 Manifest-Driven Drift Detection 與 Decision 6: dispatch-aware inventory (defensive read-only)
 
@@ -64,15 +64,15 @@
 
 - [ ] 9.1 驗證 Multi-Tier Inventory Discovery 覆蓋三 tier 掃描（global / dotfiles source / project-local）且 noise filter 正確
 - [ ] 9.2 驗證 Four-State Drift Classification 對 symlink、plugin、project 皆輸出 ok/drifted/broken/unmanaged 之一
-- [ ] 9.3 驗證 Unified Dashboard Presentation：Overview 彙總 + 4 drill-down tab 各含 summary chips 與排序表格
-- [ ] 9.4 驗證 Non-Invasive Guidance：所有 command 皆無寫入 FS、UI 僅顯示 CTA 指令字串
+- [x] 9.3 驗證 Unified Dashboard Presentation：Overview 彙總 + 4 drill-down tab 各含 summary chips 與排序表格
+- [x] 9.4 驗證 Non-Invasive Guidance：所有 command 皆無寫入 FS、UI 僅顯示 CTA 指令字串
 - [ ] 9.5 驗證 Manifest-Driven Drift Detection：對有 manifest 的 project 輸出正確的 satisfied/missing/excess 分類；對無 manifest 的 project 不顯示相關欄位
-- [ ] 9.6 驗證 Decision 1: 單一 capability 優於 4 個 capability — `specs/config-observability/` 結構正確且 5 個 requirement 齊備
+- [x] 9.6 驗證 Decision 1: 單一 capability 優於 4 個 capability — `specs/config-observability/` 結構正確且 5 個 requirement 齊備
 
 ## 10. 編譯與結案
 
-- [ ] 10.1 `spectra validate add-config-observability` 通過
-- [ ] 10.2 `cargo check` 無 error / warning
-- [ ] 10.3 `bunx tsc --noEmit` 乾淨
+- [x] 10.1 `spectra validate add-config-observability` 通過
+- [x] 10.2 `cargo check` 無 error / warning
+- [x] 10.3 `bunx tsc --noEmit` 乾淨
 - [ ] 10.4 `bun run tauri dev` 端到端眼見：4 個 tab 都有資料、Overview 彙總正確、至少 1 個有 manifest 的 project 顯示 manifest drift
 - [ ] 10.5 `spectra archive add-config-observability` 歸檔

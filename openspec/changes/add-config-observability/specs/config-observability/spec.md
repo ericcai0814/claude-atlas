@@ -98,11 +98,13 @@ The dashboard SHALL re-scan its data source when the user switches to a tab and 
 
 ### Requirement: Non-Invasive Guidance
 
-The system SHALL NOT perform any mutation to Claude Code configuration, the filesystem under `~/.claude/`, `~/dotfiles/claude/`, or any project-local `.claude/` directory.
+The system SHALL NOT mutate Claude Code configuration. Specifically, the system SHALL NOT write to, modify, or delete any file under `~/.claude/`, `~/dotfiles/claude/`, any project-local `.claude/` directory, any `settings.json`, or any `dispatch.yaml`, and SHALL NOT toggle plugin or MCP server enablement.
 
 When drift is detected, the system SHALL display a Call-To-Action block containing the exact shell command the user can copy and run to remediate the drift (for example `cd ~/dotfiles && just restore`).
 
-The system SHALL NOT execute shell commands on behalf of the user, SHALL NOT modify `settings.json` or any configuration file, and SHALL NOT toggle plugin or MCP server enablement.
+The system SHALL NOT execute shell commands that mutate Claude Code configuration on behalf of the user. Remediation commands are copied to the clipboard; the user executes them externally.
+
+**Permitted read-side OS affordances.** The system MAY invoke shell commands that are strictly non-mutating to Claude Code configuration, for the sole purpose of helping the user navigate or inspect observed state. Permitted examples: reveal a file in the OS file manager (`open -R` on macOS, `xdg-open` on Linux, `explorer /select,` on Windows) and open a file in an external editor (for example launching VS Code via the `code` CLI or `open -a`). These affordances MUST NOT write to Claude Code configuration paths.
 
 #### Scenario: Drift produces CTA only
 
@@ -119,6 +121,18 @@ The system SHALL NOT execute shell commands on behalf of the user, SHALL NOT mod
 
 - **WHEN** the Plugins tab displays plugin enablement state
 - **THEN** the system renders status indicators only and SHALL NOT provide toggle controls or any affordance that mutates `settings.json`
+
+#### Scenario: Reveal in file manager is permitted
+
+- **WHEN** the user activates a "Reveal" control on an observed artifact (symlink, project root, etc.)
+- **THEN** the system MAY invoke an OS file manager command (for example `open -R <path>`) to highlight the target
+- **AND** this invocation SHALL NOT write to any Claude Code configuration path
+
+#### Scenario: Open in external editor is permitted
+
+- **WHEN** the user activates an "Open in editor" control on a project or file
+- **THEN** the system MAY launch an external editor (for example `code <path>` or `open -a "Visual Studio Code" <path>`)
+- **AND** this invocation SHALL NOT write to any Claude Code configuration path
 
 ### Requirement: Manifest-Driven Drift Detection
 
