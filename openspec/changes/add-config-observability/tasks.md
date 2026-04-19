@@ -1,0 +1,78 @@
+## 1. 基礎設施與 Rust command 契約
+
+- [x] 1.1 Scaffold Tauri + React TS + bun (commit 6832493)
+- [x] 1.2 建立 `ARCHITECTURE.md` 訂下 data model
+- [x] 1.3 實作 `expand_tilde` 與 `is_noise` 工具函式（Decision 2: tier 邊界三層固定）
+- [ ] 1.4 稽核所有 Phase 1 command 遵循 Decision 4: Rust command shape 一致契約（`Result<Vec<T>, String>` + serde `rename_all = "camelCase"`）
+
+## 2. Symlinks 路徑 — 覆蓋 Four-State Drift Classification 與 Multi-Tier Inventory Discovery (global tier)
+
+- [x] 2.1 實作 `scan_symlinks` command（global tier 掃描）
+- [x] 2.2 實作 Decision 3: drift 四態分類邏輯（ok / drifted / broken / unmanaged）
+- [x] 2.3 Symlinks tab UI：summary chips + 排序表格 + drift CTA
+- [ ] 2.4 驗證 Symlinks tab 的 CTA 只顯示指令字串不執行，符合 Non-Invasive Guidance
+
+## 3. Projects 路徑 — 覆蓋 Multi-Tier Inventory Discovery (project-local tier)
+
+- [ ] 3.1 新增 `scan_projects(roots: Vec<String>) -> Vec<Project>` command
+- [ ] 3.2 實作 one-level-deep walk，偵測含 `.claude/` 或 `CLAUDE.md` 的 repo
+- [ ] 3.3 讀取每個 project 的 skills / agents 清單與 `~/.claude/projects/<slug>/memory/MEMORY.md` 行數
+- [ ] 3.4 Projects tab UI：列出 repo 名、是否有 `.claude/`、是否有 `CLAUDE.md`、skills/agents 數量、memory lines
+- [ ] 3.5 roots 參數 Phase 1 由 TS 側硬編 `["~"]`，Phase 2 再做設定 UI
+
+## 4. Plugins 路徑 — 對 plugin 狀態套用 Four-State Drift Classification
+
+- [ ] 4.1 新增 `list_plugins(settings_path, usage_log_path) -> Vec<Plugin>` command
+- [ ] 4.2 解析 `settings.json` 的 `enabledPlugins` 與 `~/.claude/skill-usage.log`
+- [ ] 4.3 計算 `triggerCount7d` 與 `deadStatus`（active ≥ 3 次 / quiet 1-2 次 / dead 0 次，以 30 天為窗）
+- [ ] 4.4 新增 `list_mcp(settings_path, project_roots) -> Vec<McpServer>` command 合併全域與 project-level MCP
+- [ ] 4.5 Plugins tab UI：列出每個 plugin 名、enabled、last triggered、trigger count、dead status
+- [ ] 4.6 顯示 "根據 skill-usage.log 推算" 的 disclaimer
+
+## 5. Context Budget 路徑
+
+- [ ] 5.1 新增 `compute_context_budget(rules_dir, skills_dir, whitelist_path, memory_dir) -> ContextBudget` command
+- [ ] 5.2 計算 `rules/common/*.md` bytes 總和、`.global-whitelist` 行數、catalog 下的 skill count、所有 MEMORY.md 總行數
+- [ ] 5.3 Context tab UI：card 列每項 budget 指標
+
+## 6. Overview 彙總 — 覆蓋 Unified Dashboard Presentation
+
+- [ ] 6.1 新增 `compute_drift_summary() -> DriftSummary` 彙總所有類別 drift 計數
+- [ ] 6.2 Overview tab UI：broken / drifted / dead-plugin / over-budget memory 四張 card
+- [ ] 6.3 `unmanaged` 不計入 drift summary（僅在 Symlinks tab 可見）— 對應 design.md Open Questions 的暫定結論
+- [ ] 6.4 tab 切換時重新 invoke command，對應 Decision 5: 不做快取，每次 invoke 重掃
+
+## 7. 嚴守 Non-Invasive Guidance
+
+- [ ] 7.1 稽核所有 command：僅 read，無任何 `fs::write` / `fs::remove_*` / 對 `~/.claude` 或 `.claude/` 的 mutate 呼叫
+- [ ] 7.2 所有 drift UI 只顯示 CTA 指令字串（可複製），無「執行」按鈕或 confirm dialog
+- [ ] 7.3 Plugin tab 無 toggle UI 或 disable 連結，只顯示狀態
+- [ ] 7.4 Tauri capability 設定僅允許 `core:default` + `opener:default`，無 FS write scope
+
+## 8. Dispatch Manifest 整合 — 覆蓋 Manifest-Driven Drift Detection 與 Decision 6: dispatch-aware inventory (defensive read-only)
+
+- [ ] 8.1 在 `src/types.ts` 新增 `DispatchManifest`、`ManifestDriftEntry`、`ManifestState` (`satisfied` / `missing` / `excess`) TS 型別
+- [ ] 8.2 在 `src-tauri/Cargo.toml` 加入 `serde_yaml` 依賴，採 `serde_yaml::Value` 寬鬆 parse 實踐 defensive read-only
+- [ ] 8.3 在 `scan_projects` 偵測 `<project>/.claude/dispatch.yaml` 並以 `serde_yaml::Value` parse；parse 失敗時記錄錯誤於 `Project.manifestParseError`，繼續掃描其他 project
+- [ ] 8.4 實作三階段 lookup 邏輯（project → global whitelist → dotfiles source）決定每個 declared artifact 的 `satisfied` / `missing` 狀態
+- [ ] 8.5 實作 `excess` 偵測：project `.claude/skills/` 中不在 manifest include 也不在 global whitelist 的 entry 標為 excess
+- [ ] 8.6 Projects tab UI：當 project 有 manifest，顯示 manifest drift 欄位（declared vs actual 對照）；無 manifest 時降級僅顯示基礎 inventory，不渲染相關欄位
+- [ ] 8.7 Overview tab：在既有 drift cards 旁加入 `manifest-drifted projects` 計數 card
+- [ ] 8.8 驗證 No mutation to manifest：稽核 Rust 端確認無 `fs::write` 或任何對 `dispatch.yaml` 的寫入
+
+## 9. Requirement 覆蓋驗證
+
+- [ ] 9.1 驗證 Multi-Tier Inventory Discovery 覆蓋三 tier 掃描（global / dotfiles source / project-local）且 noise filter 正確
+- [ ] 9.2 驗證 Four-State Drift Classification 對 symlink、plugin、project 皆輸出 ok/drifted/broken/unmanaged 之一
+- [ ] 9.3 驗證 Unified Dashboard Presentation：Overview 彙總 + 4 drill-down tab 各含 summary chips 與排序表格
+- [ ] 9.4 驗證 Non-Invasive Guidance：所有 command 皆無寫入 FS、UI 僅顯示 CTA 指令字串
+- [ ] 9.5 驗證 Manifest-Driven Drift Detection：對有 manifest 的 project 輸出正確的 satisfied/missing/excess 分類；對無 manifest 的 project 不顯示相關欄位
+- [ ] 9.6 驗證 Decision 1: 單一 capability 優於 4 個 capability — `specs/config-observability/` 結構正確且 5 個 requirement 齊備
+
+## 10. 編譯與結案
+
+- [ ] 10.1 `spectra validate add-config-observability` 通過
+- [ ] 10.2 `cargo check` 無 error / warning
+- [ ] 10.3 `bunx tsc --noEmit` 乾淨
+- [ ] 10.4 `bun run tauri dev` 端到端眼見：4 個 tab 都有資料、Overview 彙總正確、至少 1 個有 manifest 的 project 顯示 manifest drift
+- [ ] 10.5 `spectra archive add-config-observability` 歸檔
