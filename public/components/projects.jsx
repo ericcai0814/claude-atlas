@@ -81,8 +81,12 @@ function ProjectDetail({ project: p, onToast }) {
           <div className="detail-sub">{p.path}</div>
         </div>
         <div style={{display:'flex', gap: 8}}>
-          <button className="btn"><Icons.Terminal/> {t('projects.openVSCode')}</button>
-          <button className="btn ghost"><Icons.ExternalLink/> {t('projects.finder')}</button>
+          <button className="btn" onClick={() => window.openInVSCode(p.path, onToast)}>
+            <Icons.Terminal/> {t('projects.openVSCode')}
+          </button>
+          <button className="btn ghost" onClick={() => window.revealInFinder(p.path, onToast)}>
+            <Icons.ExternalLink/> {t('projects.finder')}
+          </button>
         </div>
       </div>
 

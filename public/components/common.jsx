@@ -47,6 +47,60 @@ window.Icons = (() => {
   };
 })();
 
+// Reveal a path in the OS file manager via Tauri command.
+// Falls back to a toast explaining the browser can't reveal when not in Tauri.
+window.revealInFinder = function revealInFinder(path, onToast) {
+  const tauri = window.__TAURI__;
+  const label = (k, fallback) => {
+    try { return window.i18n ? window.i18n.t(k) : fallback; } catch { return fallback; }
+  };
+  if (!tauri?.core?.invoke) {
+    onToast && onToast({
+      kind: 'info',
+      title: label('common.browserOnly', 'Browser mode'),
+      message: label('common.revealNeedsTauri', 'Open the app via tauri dev to use Reveal'),
+    });
+    return;
+  }
+  tauri.core.invoke('reveal_in_finder', { path })
+    .then(() => onToast && onToast({
+      kind: 'ok',
+      title: label('symlinks.revealed', 'Revealed'),
+      message: path,
+    }))
+    .catch((err) => onToast && onToast({
+      kind: 'error',
+      title: label('common.revealFailed', 'Reveal failed'),
+      message: String(err),
+    }));
+};
+
+window.openInVSCode = function openInVSCode(path, onToast) {
+  const tauri = window.__TAURI__;
+  const label = (k, fallback) => {
+    try { return window.i18n ? window.i18n.t(k) : fallback; } catch { return fallback; }
+  };
+  if (!tauri?.core?.invoke) {
+    onToast && onToast({
+      kind: 'info',
+      title: label('common.browserOnly', 'Browser mode'),
+      message: label('common.openNeedsTauri', 'Open the app via tauri dev to use Open in VS Code'),
+    });
+    return;
+  }
+  tauri.core.invoke('open_in_vscode', { path })
+    .then(() => onToast && onToast({
+      kind: 'ok',
+      title: label('projects.opened', 'Opened in VS Code'),
+      message: path,
+    }))
+    .catch((err) => onToast && onToast({
+      kind: 'error',
+      title: label('common.openFailed', 'Open failed'),
+      message: String(err),
+    }));
+};
+
 window.fmt = (() => {
   const kb = (bytes) => bytes < 1024 ? `${bytes} B` : `${(bytes/1024).toFixed(1)} KB`;
   const tokens = (bytes) => {

@@ -113,7 +113,9 @@ function SymlinkDetail({ entry, onToast }) {
           <div className="detail-sub">{t(`symlinks.explain.${state}`)}</div>
         </div>
         <div style={{display:'flex', gap: 8}}>
-          <button className="btn"><Icons.ExternalLink/> {t('symlinks.reveal')}</button>
+          <button className="btn" onClick={() => window.revealInFinder(linkPath, onToast)}>
+            <Icons.ExternalLink/> {t('symlinks.reveal')}
+          </button>
           <Badge kind={state}>{t(`state.${state}`)}</Badge>
         </div>
       </div>
