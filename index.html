@@ -1,14 +1,36 @@
 <!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tauri + React + Typescript</title>
-  </head>
+<html lang="en" data-theme="dark" data-density="compact" data-drift-palette="semantic" translate="no">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="google" content="notranslate"/>
+  <title>claude-atlas · Configuration observability</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/styles/tokens.css"/>
+  <link rel="stylesheet" href="/styles/app.css"/>
+</head>
+<body>
+  <div id="root"></div>
 
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
+
+  <script src="/data/i18n.js"></script>
+  <script src="/data/mock.js"></script>
+
+  <script type="text/babel" src="/components/common.jsx"></script>
+  <script type="text/babel" src="/components/shell.jsx"></script>
+  <script type="text/babel" src="/components/overview.jsx"></script>
+  <script type="text/babel" src="/components/symlinks.jsx"></script>
+  <script type="text/babel" src="/components/projects.jsx"></script>
+  <script type="text/babel" src="/components/plugins.jsx"></script>
+  <script type="text/babel" src="/components/context.jsx"></script>
+  <script type="text/babel" src="/components/app.jsx"></script>
+
+  <!-- Vite entry kept as no-op so dev server/builder is happy -->
+  <script type="module" src="/src/main.tsx"></script>
+</body>
 </html>

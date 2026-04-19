@@ -10,11 +10,14 @@
     "frontendDist": "../dist"
   },
   "app": {
+    "withGlobalTauri": true,
     "windows": [
       {
         "title": "claude-atlas",
-        "width": 800,
-        "height": 600
+        "width": 1400,
+        "height": 900,
+        "minWidth": 960,
+        "minHeight": 640
       }
     ],
     "security": {
