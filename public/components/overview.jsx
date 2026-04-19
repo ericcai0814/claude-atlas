@@ -66,7 +66,7 @@ window.OverviewTab = function OverviewTab({ data, loading, onGoTo, onToast }) {
                   display:'grid',
                   gridTemplateColumns: '90px 24px 1fr auto',
                   gap: 12,
-                  padding: '10px 18px',
+                  padding: 'calc(var(--sp-row) + 2px) calc(var(--sp-cell) + 6px)',
                   alignItems:'center',
                   borderBottom: i < recentDrift.length-1 ? '1px solid var(--border-subtle)' : 'none',
                   fontSize: 'var(--fs-12)'
@@ -116,7 +116,7 @@ function KPI({ label, value, tone, delta, onClick, zero, neutral }) {
 
 function SnapRow({ label, value, sub }) {
   return (
-    <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding: '8px 18px', fontSize:'var(--fs-12)'}}>
+    <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', padding: 'var(--sp-row) calc(var(--sp-cell) + 6px)', fontSize:'var(--fs-12)'}}>
       <div>
         <div style={{color:'var(--text-primary)'}}>{label}</div>
         {sub && <div style={{color:'var(--text-tertiary)', fontSize:'var(--fs-11)', marginTop:2}}>{sub}</div>}

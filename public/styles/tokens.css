@@ -169,12 +169,19 @@ button { font-family: inherit; font-size: inherit; }
 ::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: 10px; border: 2px solid var(--bg-app); }
 ::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
 
-/* density variants (Tweaks) */
+/* density variants (Tweaks) — drive row/cell padding across lists, tables, cards.
+   Compact vs comfortable differ by ~9px row / ~6px cell to make the toggle
+   visibly obvious (not a 1-2px tweak). Default (:root) falls between so any
+   selector using these tokens still renders sanely if density is unset. */
+:root {
+  --sp-row: 8px;
+  --sp-cell: 12px;
+}
 [data-density="compact"] {
-  --sp-row: 6px;
-  --sp-cell: 8px;
+  --sp-row: 5px;
+  --sp-cell: 10px;
 }
 [data-density="comfortable"] {
-  --sp-row: 12px;
-  --sp-cell: 14px;
+  --sp-row: 14px;
+  --sp-cell: 16px;
 }

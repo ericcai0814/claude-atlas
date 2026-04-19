@@ -459,7 +459,7 @@
 }
 .data-table thead th {
   text-align: left;
-  padding: 8px 12px;
+  padding: calc(var(--sp-row) + 2px) var(--sp-cell);
   font-weight: var(--fw-medium);
   font-size: var(--fs-11);
   color: var(--text-tertiary);
@@ -472,7 +472,7 @@
   z-index: 2;
 }
 .data-table tbody td {
-  padding: var(--sp-row, 9px) 12px;
+  padding: var(--sp-row) var(--sp-cell);
   border-bottom: 1px solid var(--border-subtle);
   color: var(--text-primary);
   vertical-align: middle;
@@ -498,7 +498,7 @@
   .kpi-grid { grid-template-columns: repeat(3, 1fr); }
 }
 .kpi {
-  padding: 14px 16px;
+  padding: calc(var(--sp-row) + 6px) calc(var(--sp-cell) + 4px);
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
@@ -585,7 +585,7 @@
 .filter-bar {
   display: flex;
   gap: var(--sp-2);
-  padding: 10px 12px;
+  padding: calc(var(--sp-row) + 2px) var(--sp-cell);
   border-bottom: 1px solid var(--border-subtle);
   background: var(--bg-surface);
   position: sticky;
@@ -680,7 +680,7 @@
   grid-template-columns: 140px 1fr;
   gap: 10px 16px;
   font-size: var(--fs-12);
-  padding: 12px 16px;
+  padding: calc(var(--sp-row) + 4px) var(--sp-cell);
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-md);
@@ -735,7 +735,7 @@
   grid-template-columns: 14px 1fr auto;
   align-items: center;
   gap: var(--sp-3);
-  padding: 10px 14px;
+  padding: calc(var(--sp-row) + 2px) calc(var(--sp-cell) + 2px);
   border-bottom: 1px solid var(--border-subtle);
   cursor: pointer;
 }
