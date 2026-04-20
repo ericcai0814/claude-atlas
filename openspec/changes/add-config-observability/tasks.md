@@ -14,33 +14,33 @@
 
 ## 3. Projects 路徑 — 覆蓋 Multi-Tier Inventory Discovery (project-local tier)
 
-- [ ] 3.1 新增 `scan_projects(roots: Vec<String>) -> Vec<Project>` command
-- [ ] 3.2 實作 one-level-deep walk，偵測含 `.claude/` 或 `CLAUDE.md` 的 repo
-- [ ] 3.3 讀取每個 project 的 skills / agents 清單與 `~/.claude/projects/<slug>/memory/MEMORY.md` 行數
-- [ ] 3.4 Projects tab UI：列出 repo 名、是否有 `.claude/`、是否有 `CLAUDE.md`、skills/agents 數量、memory lines
-- [ ] 3.5 roots 參數 Phase 1 由 TS 側硬編 `["~"]`，Phase 2 再做設定 UI
+- [x] 3.1 新增 `scan_projects(roots: Vec<String>) -> Vec<Project>` command
+- [x] 3.2 實作 one-level-deep walk，偵測含 `.claude/` 或 `CLAUDE.md` 的 repo
+- [x] 3.3 讀取每個 project 的 skills / agents 清單與 `~/.claude/projects/<slug>/memory/MEMORY.md` 行數
+- [x] 3.4 Projects tab UI：列出 repo 名、是否有 `.claude/`、是否有 `CLAUDE.md`、skills/agents 數量、memory lines（UI 已在 handoff scaffold 中；`app.jsx` 已把 mock 換成 invoke）
+- [x] 3.5 roots 參數 Phase 1 由 TS 側硬編 `["~"]`，Phase 2 再做設定 UI
 
 ## 4. Plugins 路徑 — 對 plugin 狀態套用 Four-State Drift Classification
 
-- [ ] 4.1 新增 `list_plugins(settings_path, usage_log_path) -> Vec<Plugin>` command
-- [ ] 4.2 解析 `settings.json` 的 `enabledPlugins` 與 `~/.claude/skill-usage.log`
-- [ ] 4.3 計算 `triggerCount7d` 與 `deadStatus`（active ≥ 3 次 / quiet 1-2 次 / dead 0 次，以 30 天為窗）
-- [ ] 4.4 新增 `list_mcp(settings_path, project_roots) -> Vec<McpServer>` command 合併全域與 project-level MCP
-- [ ] 4.5 Plugins tab UI：列出每個 plugin 名、enabled、last triggered、trigger count、dead status
-- [ ] 4.6 顯示 "根據 skill-usage.log 推算" 的 disclaimer
+- [x] 4.1 新增 `list_plugins(settings_path, usage_log_path) -> Vec<Plugin>` command
+- [x] 4.2 解析 `settings.json` 的 `enabledPlugins` 與 `~/.claude/skill-usage.log`
+- [x] 4.3 計算 `triggerCount7d` 與 `deadStatus`（active ≥ 3 次 / quiet 1-2 次 / dead 0 次，以 30 天為窗）
+- [x] 4.4 新增 `list_mcp(settings_path, project_roots) -> Vec<McpServer>` command 合併全域與 project-level MCP（實作讀 `~/.claude.json` 的 `mcpServers` 與 `projects.*.mcpServers`；簽名調整為 `list_mcp(claude_json_path)`，因 MCP 設定實際存在 `.claude.json` 不是 `settings.json`）
+- [x] 4.5 Plugins tab UI：列出每個 plugin 名、enabled、last triggered、trigger count、dead status（handoff UI 已有欄位；`app.jsx` 已 invoke）
+- [x] 4.6 顯示 "根據 skill-usage.log 推算" 的 disclaimer（`plugins.section.subtitle` i18n 字串：「From settings.json · trigger counts from skill-usage.log」/「觸發次數來自 skill-usage.log」已達成）
 
 ## 5. Context Budget 路徑
 
-- [ ] 5.1 新增 `compute_context_budget(rules_dir, skills_dir, whitelist_path, memory_dir) -> ContextBudget` command
-- [ ] 5.2 計算 `rules/common/*.md` bytes 總和、`.global-whitelist` 行數、catalog 下的 skill count、所有 MEMORY.md 總行數
-- [ ] 5.3 Context tab UI：card 列每項 budget 指標
+- [x] 5.1 新增 `compute_context_budget(rules_dir, skills_dir, whitelist_path, memory_dir) -> ContextBudget` command
+- [x] 5.2 計算 `rules/common/*.md` bytes 總和、`.global-whitelist` 行數、catalog 下的 skill count、所有 MEMORY.md 總行數
+- [x] 5.3 Context tab UI：card 列每項 budget 指標（handoff UI 已有；`app.jsx` 以 `compute_context_budget` 取代 mock）
 
 ## 6. Overview 彙總 — 覆蓋 Unified Dashboard Presentation
 
-- [ ] 6.1 新增 `compute_drift_summary() -> DriftSummary` 彙總所有類別 drift 計數
-- [ ] 6.2 Overview tab UI：broken / drifted / dead-plugin / over-budget memory 四張 card
+- [x] 6.1 新增 `compute_drift_summary() -> DriftSummary` 彙總所有類別 drift 計數（採 client-side 彙總：每個 scan fn 回來時於 `driftSummary` 更新對應欄位，等同效果但避免重複 I/O，符合 Decision 5 不做快取）
+- [x] 6.2 Overview tab UI：broken / drifted / dead-plugin / over-budget memory 四張 card（handoff UI 已有 5 KPI card + 1 manifest drift card）
 - [x] 6.3 `unmanaged` 不計入 drift summary（僅在 Symlinks tab 可見）— 對應 design.md Open Questions 的暫定結論
-- [ ] 6.4 tab 切換時重新 invoke command，對應 Decision 5: 不做快取，每次 invoke 重掃
+- [x] 6.4 tab 切換時重新 invoke command，對應 Decision 5: 不做快取，每次 invoke 重掃（`app.jsx` 以 `useRef` 跳過首次渲染後，依 tab key 呼叫對應 scan fn）
 
 ## 7. 嚴守 Non-Invasive Guidance
 
@@ -51,14 +51,14 @@
 
 ## 8. Dispatch Manifest 整合 — 覆蓋 Manifest-Driven Drift Detection 與 Decision 6: dispatch-aware inventory (defensive read-only)
 
-- [ ] 8.1 在 `src/types.ts` 新增 `DispatchManifest`、`ManifestDriftEntry`、`ManifestState` (`satisfied` / `missing` / `excess`) TS 型別
-- [ ] 8.2 在 `src-tauri/Cargo.toml` 加入 `serde_yaml` 依賴，採 `serde_yaml::Value` 寬鬆 parse 實踐 defensive read-only
-- [ ] 8.3 在 `scan_projects` 偵測 `<project>/.claude/dispatch.yaml` 並以 `serde_yaml::Value` parse；parse 失敗時記錄錯誤於 `Project.manifestParseError`，繼續掃描其他 project
-- [ ] 8.4 實作三階段 lookup 邏輯（project → global whitelist → dotfiles source）決定每個 declared artifact 的 `satisfied` / `missing` 狀態
-- [ ] 8.5 實作 `excess` 偵測：project `.claude/skills/` 中不在 manifest include 也不在 global whitelist 的 entry 標為 excess
-- [ ] 8.6 Projects tab UI：當 project 有 manifest，顯示 manifest drift 欄位（declared vs actual 對照）；無 manifest 時降級僅顯示基礎 inventory，不渲染相關欄位
-- [ ] 8.7 Overview tab：在既有 drift cards 旁加入 `manifest-drifted projects` 計數 card
-- [ ] 8.8 驗證 No mutation to manifest：稽核 Rust 端確認無 `fs::write` 或任何對 `dispatch.yaml` 的寫入
+- [x] 8.1 在 `src/types.ts` 新增 `DispatchManifest`、`ManifestDriftEntry`、`ManifestState` (`satisfied` / `missing` / `excess`) TS 型別（實作走 handoff `public/*.jsx` + Babel runtime 路線，無 `src/types.ts`；契約以 Rust serde `rename_all = "camelCase"` struct + JSX consumer 共同持有，等同性達成）
+- [x] 8.2 在 `src-tauri/Cargo.toml` 加入 `serde_yaml` 依賴，採 `serde_yaml::Value` 寬鬆 parse 實踐 defensive read-only
+- [x] 8.3 在 `scan_projects` 偵測 `<project>/.claude/dispatch.yaml` 並以 `serde_yaml::Value` parse；parse 失敗時記錄錯誤於 `Project.manifestParseError`，繼續掃描其他 project
+- [x] 8.4 實作三階段 lookup 邏輯（project → global whitelist → dotfiles source）決定每個 declared artifact 的 `satisfied` / `missing` 狀態
+- [x] 8.5 實作 `excess` 偵測：project `.claude/skills/` 中不在 manifest include 也不在 global whitelist 的 entry 標為 excess
+- [x] 8.6 Projects tab UI：當 project 有 manifest，顯示 manifest drift 欄位（declared vs actual 對照）；無 manifest 時降級僅顯示基礎 inventory，不渲染相關欄位
+- [x] 8.7 Overview tab：在既有 drift cards 旁加入 `manifest-drifted projects` 計數 card
+- [x] 8.8 驗證 No mutation to manifest：稽核 Rust 端確認無 `fs::write` 或任何對 `dispatch.yaml` 的寫入（`projects.rs` 僅 `fs::read_dir` / `fs::read_to_string` / `fs::canonicalize` / `fs::metadata`）
 
 ## 9. Requirement 覆蓋驗證
 

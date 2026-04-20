@@ -15,9 +15,12 @@ window.ProjectsTab = function ProjectsTab({ data, loading, onToast }) {
       cta={<button className="btn primary" style={{marginTop:12}}><Icons.Refresh/> {t('projects.empty.cta')}</button>}/>;
   }
 
+  const hasManifestDrift = (p) => Array.isArray(p.manifestDrift) && p.manifestDrift.some(d => d.state === 'missing' || d.state === 'excess');
+
   let rows = data.projects;
   if (filter === 'managed') rows = rows.filter(p => p.hasClaudeDir);
   if (filter === 'drift') rows = rows.filter(p => (p.memoryLines||0) > 200);
+  if (filter === 'manifest') rows = rows.filter(hasManifestDrift);
   if (query) rows = rows.filter(p => p.name.toLowerCase().includes(query.toLowerCase()) || p.path.toLowerCase().includes(query.toLowerCase()));
 
   const selected = rows.find(p => p.path === selectedPath) || rows[0];
@@ -25,6 +28,7 @@ window.ProjectsTab = function ProjectsTab({ data, loading, onToast }) {
     all: data.projects.length,
     managed: data.projects.filter(p=>p.hasClaudeDir).length,
     drift: data.projects.filter(p=>(p.memoryLines||0)>200).length,
+    manifest: data.projects.filter(hasManifestDrift).length,
   };
 
   return (
@@ -38,6 +42,7 @@ window.ProjectsTab = function ProjectsTab({ data, loading, onToast }) {
           <button className={`filter-chip ${filter==='all'?'active':''}`} onClick={()=>setFilter('all')}>{t('filter.all')}<span className="count">{counts.all}</span></button>
           <button className={`filter-chip ${filter==='managed'?'active':''}`} onClick={()=>setFilter('managed')}>{t('filter.managed')}<span className="count">{counts.managed}</span></button>
           <button className={`filter-chip ${filter==='drift'?'active':''}`} onClick={()=>setFilter('drift')}>{t('filter.overBudget')}<span className="count">{counts.drift}</span></button>
+          {counts.manifest > 0 && <button className={`filter-chip ${filter==='manifest'?'active':''}`} onClick={()=>setFilter('manifest')}>Manifest drift<span className="count">{counts.manifest}</span></button>}
         </div>
 
         <div>
@@ -53,6 +58,7 @@ window.ProjectsTab = function ProjectsTab({ data, loading, onToast }) {
                 <div style={{display:'flex', gap: 6, alignItems:'center'}}>
                   {p.hasClaudeDir && <span className="tag-chip">.claude</span>}
                   {p.hasClaudeMd && <span className="tag-chip">CLAUDE.md</span>}
+                  {p.manifest && <span className="tag-chip" style={hasManifestDrift(p) ? {color:'var(--sem-drifted-text)'} : {}}>{hasManifestDrift(p) ? 'manifest drift' : 'manifest ok'}</span>}
                   {p.memoryLines != null && <span className="tag-chip" style={over ? {color:'var(--sem-drifted-text)'}:{}}>{p.memoryLines}L</span>}
                 </div>
               </div>
@@ -122,6 +128,36 @@ function ProjectDetail({ project: p, onToast }) {
         <>
           <div className="section-title">{t('projects.action.title')}</div>
           <CliBox command={`claude-skill memory compact ${p.name}`} onCopy={c => onToast({kind:'ok', title: t('common.copied'), message: c})}/>
+        </>
+      )}
+
+      {p.manifestParseError && (
+        <>
+          <div className="section-title">dispatch.yaml</div>
+          <div className="muted" style={{fontSize:'var(--fs-12)', color:'var(--sem-broken-text)'}}>Parse error: {p.manifestParseError}</div>
+        </>
+      )}
+
+      {p.manifest && Array.isArray(p.manifestDrift) && (
+        <>
+          <div className="section-title">Manifest drift ({p.manifestDrift.length})</div>
+          {p.manifestDrift.length === 0 ? (
+            <div className="muted" style={{fontSize:'var(--fs-12)'}}>All declared artifacts satisfied.</div>
+          ) : (
+            <div style={{display:'flex', flexDirection:'column', gap: 4}}>
+              {p.manifestDrift.map((d, i) => {
+                const kind = d.state === 'missing' ? 'broken' : d.state === 'excess' ? 'drifted' : 'ok';
+                return (
+                  <div key={i} style={{display:'grid', gridTemplateColumns:'70px 70px 1fr 1fr', gap: 10, padding: '4px 0', fontSize:'var(--fs-12)'}}>
+                    <Badge kind={kind} showDot={false}>{d.state}</Badge>
+                    <span className="muted">{d.category}</span>
+                    <span>{d.name}</span>
+                    <span className="muted" style={{textAlign:'right'}}>{d.resolvedTier || '—'}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </>
       )}
     </div>

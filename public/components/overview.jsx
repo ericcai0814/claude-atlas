@@ -49,6 +49,9 @@ window.OverviewTab = function OverviewTab({ data, loading, onGoTo, onToast }) {
         <KPI label={t('overview.kpi.unmanaged.label')} value={d.symlinkUnmanaged} tone="unmanaged" delta={t('overview.kpi.unmanaged.delta')} onClick={() => onGoTo('symlinks','unmanaged')} zero={false} neutral/>
         <KPI label={t('overview.kpi.dead.label')} value={d.pluginsDead} tone="dead" delta={t('overview.kpi.dead.delta')} onClick={() => onGoTo('plugins','dead')} zero={d.pluginsDead===0}/>
         <KPI label={t('overview.kpi.memory.label')} value={d.memoryOverBudget} tone="memory" delta={t('overview.kpi.memory.delta')} onClick={() => onGoTo('context','memory')} zero={d.memoryOverBudget===0}/>
+        {d.manifestDrifted != null && (
+          <KPI label="Manifest drift" value={d.manifestDrifted} tone="drifted" delta={d.manifestDrifted>0 ? 'projects with missing / excess' : 'all manifests satisfied'} onClick={() => onGoTo('projects','manifest')} zero={d.manifestDrifted===0}/>
+        )}
       </div>
 
       <div style={{display:'grid', gridTemplateColumns:'1.5fr 1fr', gap: 16}}>
