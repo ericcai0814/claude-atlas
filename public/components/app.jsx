@@ -63,7 +63,7 @@ function App() {
     const tauri = window.__TAURI__;
     if (!tauri?.core?.invoke) return Promise.resolve();
     return tauri.core.invoke('scan_projects', {
-      roots: ['~'],
+      roots: ['~', '~/project'],
       dotfilesClaude: '~/dotfiles/claude',
       globalWhitelist: '~/dotfiles/claude/skills/.global-whitelist',
     })
