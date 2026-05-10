@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 .spectra/
 openspec/.vector-search.db*
+
+# Claude Code (local-only)
+.claude/settings.local.json
