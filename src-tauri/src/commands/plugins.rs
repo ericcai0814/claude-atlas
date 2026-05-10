@@ -140,8 +140,22 @@ pub fn list_plugins(
         })
         .collect();
 
-    plugins.sort_by(|a, b| a.name.cmp(&b.name));
+    plugins.sort_by(|a, b| {
+        severity_rank(a.dead_status)
+            .cmp(&severity_rank(b.dead_status))
+            .then_with(|| a.name.cmp(&b.name))
+    });
     Ok(plugins)
+}
+
+pub(crate) fn severity_rank(dead_status: &str) -> u8 {
+    match dead_status {
+        "dead" => 0,
+        "quiet" => 1,
+        "active" => 2,
+        "disabled" => 3,
+        _ => 4,
+    }
 }
 
 fn extract_mcp(
@@ -182,4 +196,74 @@ pub fn list_mcp(claude_json_path: String) -> Result<Vec<McpServer>, String> {
     }
     servers.sort_by(|a, b| a.name.cmp(&b.name));
     Ok(servers)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn plugin(name: &str, dead_status: &'static str) -> Plugin {
+        Plugin {
+            name: name.to_string(),
+            enabled: dead_status != "disabled",
+            last_triggered_at: None,
+            trigger_count7d: 0,
+            dead_status,
+        }
+    }
+
+    fn sort_severity(plugins: &mut Vec<Plugin>) {
+        plugins.sort_by(|a, b| {
+            severity_rank(a.dead_status)
+                .cmp(&severity_rank(b.dead_status))
+                .then_with(|| a.name.cmp(&b.name))
+        });
+    }
+
+    #[test]
+    fn spec_example_dead_status_severity_order() {
+        // Spec R3 example table:
+        // | dead_status | plugin name | sort position |
+        // | dead        | alpha       | 1             |
+        // | dead        | zebra       | 2             |
+        // | quiet       | beta        | 3             |
+        // | active      | gamma       | 4             |
+        // | disabled    | delta       | 5             |
+        let mut plugins = vec![
+            plugin("delta", "disabled"),
+            plugin("zebra", "dead"),
+            plugin("gamma", "active"),
+            plugin("beta", "quiet"),
+            plugin("alpha", "dead"),
+        ];
+        sort_severity(&mut plugins);
+
+        let order: Vec<(&str, &str)> = plugins
+            .iter()
+            .map(|p| (p.dead_status, p.name.as_str()))
+            .collect();
+        assert_eq!(
+            order,
+            vec![
+                ("dead", "alpha"),
+                ("dead", "zebra"),
+                ("quiet", "beta"),
+                ("active", "gamma"),
+                ("disabled", "delta"),
+            ]
+        );
+    }
+
+    #[test]
+    fn name_tiebreak_within_same_dead_status() {
+        let mut plugins = vec![
+            plugin("zeta", "quiet"),
+            plugin("alpha", "quiet"),
+            plugin("middle", "quiet"),
+        ];
+        sort_severity(&mut plugins);
+
+        let names: Vec<&str> = plugins.iter().map(|p| p.name.as_str()).collect();
+        assert_eq!(names, vec!["alpha", "middle", "zeta"]);
+    }
 }
