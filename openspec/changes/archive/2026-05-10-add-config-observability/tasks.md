@@ -75,4 +75,4 @@
 - [x] 10.2 `cargo check` 無 error / warning
 - [x] 10.3 `bunx tsc --noEmit` 乾淨
 - [x] 10.4 `bun run tauri dev` 端到端眼見：4 個 tab 都有資料、Overview 彙總正確、至少 1 個有 manifest 的 project 顯示 manifest drift
-- [ ] 10.5 `spectra archive add-config-observability` 歸檔
+- [x] 10.5 `spectra archive add-config-observability` 歸檔
