@@ -1,6 +1,6 @@
 // Root App — wires tabs, theme, refresh, loading, tweaks
 
-const { useState: useStateApp, useEffect: useEffectApp, useCallback: useCallbackApp, useMemo: useMemoApp } = React;
+const { useState: useStateApp, useEffect: useEffectApp, useCallback: useCallbackApp, useMemo: useMemoApp, useRef: useRefApp } = React;
 
 function App() {
   const t = useT();
@@ -34,26 +34,113 @@ function App() {
     });
   }, []);
 
-  // Tauri data wiring — replace mock.symlinks with real scan_symlinks output
-  // when running inside the Tauri webview. Silently fall back to mock data
-  // in a plain browser (Vite dev without tauri dev).
-  useEffectApp(() => {
+  // Tauri data wiring — replace mock data with real scan output when running
+  // inside the Tauri webview. Silently fall back to mock in plain browser.
+  const scanSymlinks = useCallbackApp(() => {
     const tauri = window.__TAURI__;
-    if (!tauri?.core?.invoke) return;
-    tauri.core.invoke('scan_symlinks', {
+    if (!tauri?.core?.invoke) return Promise.resolve();
+    return tauri.core.invoke('scan_symlinks', {
       claudeDir: '~/.claude',
       dotfilesSource: '~/dotfiles/claude',
     })
       .then((symlinks) => {
         if (!Array.isArray(symlinks)) return;
-        setData(prev => ({ ...prev, symlinks }));
+        setData(prev => {
+          const symlinkBroken = symlinks.filter(s => s.state === 'broken').length;
+          const symlinkDrifted = symlinks.filter(s => s.state === 'drifted').length;
+          const symlinkUnmanaged = symlinks.filter(s => s.state === 'unmanaged').length;
+          return {
+            ...prev,
+            symlinks,
+            driftSummary: { ...prev.driftSummary, symlinkBroken, symlinkDrifted, symlinkUnmanaged },
+          };
+        });
       })
-      .catch((err) => {
-        console.warn('[atlas] scan_symlinks failed, using mock data:', err);
-      });
+      .catch((err) => { console.warn('[atlas] scan_symlinks failed:', err); });
   }, []);
 
+  const scanProjects = useCallbackApp(() => {
+    const tauri = window.__TAURI__;
+    if (!tauri?.core?.invoke) return Promise.resolve();
+    return tauri.core.invoke('scan_projects', {
+      roots: ['~', '~/project'],
+      dotfilesClaude: '~/dotfiles/claude',
+      globalWhitelist: '~/dotfiles/claude/skills/.global-whitelist',
+    })
+      .then((projects) => {
+        if (!Array.isArray(projects)) return;
+        setData(prev => {
+          const manifestDrifted = projects.filter(
+            p => p.manifestDrift && p.manifestDrift.some(d => d.state === 'missing' || d.state === 'excess')
+          ).length;
+          return { ...prev, projects, driftSummary: { ...prev.driftSummary, manifestDrifted } };
+        });
+      })
+      .catch((err) => { console.warn('[atlas] scan_projects failed:', err); });
+  }, []);
+
+  const scanContext = useCallbackApp(() => {
+    const tauri = window.__TAURI__;
+    if (!tauri?.core?.invoke) return Promise.resolve();
+    return tauri.core.invoke('compute_context_budget', {
+      rulesDir: '~/.claude/rules/common',
+      skillsDir: '~/.claude/skills',
+      whitelistPath: '~/dotfiles/claude/skills/.global-whitelist',
+      memoryDir: '~/.claude/projects',
+    })
+      .then((contextBudget) => {
+        if (!contextBudget || typeof contextBudget !== 'object') return;
+        setData(prev => {
+          const memoryOverBudget = (prev.projects || []).filter(p => (p.memoryLines || 0) > 200).length;
+          return { ...prev, contextBudget, driftSummary: { ...prev.driftSummary, memoryOverBudget } };
+        });
+      })
+      .catch((err) => { console.warn('[atlas] compute_context_budget failed:', err); });
+  }, []);
+
+  const scanPlugins = useCallbackApp(() => {
+    const tauri = window.__TAURI__;
+    if (!tauri?.core?.invoke) return Promise.resolve();
+    const pluginsP = tauri.core.invoke('list_plugins', {
+      settingsPath: '~/.claude/settings.json',
+      usageLogPath: '~/.claude/skill-usage.log',
+    })
+      .then((plugins) => {
+        if (!Array.isArray(plugins)) return;
+        setData(prev => {
+          const pluginsDead = plugins.filter(p => p.enabled && p.deadStatus === 'dead').length;
+          return { ...prev, plugins, driftSummary: { ...prev.driftSummary, pluginsDead } };
+        });
+      })
+      .catch((err) => { console.warn('[atlas] list_plugins failed:', err); });
+    const mcpP = tauri.core.invoke('list_mcp', { claudeJsonPath: '~/.claude.json' })
+      .then((mcpServers) => {
+        if (!Array.isArray(mcpServers)) return;
+        setData(prev => ({ ...prev, mcpServers }));
+      })
+      .catch((err) => { console.warn('[atlas] list_mcp failed:', err); });
+    return Promise.all([pluginsP, mcpP]);
+  }, []);
+
+  useEffectApp(() => {
+    scanSymlinks();
+    scanProjects();
+    scanPlugins();
+    scanContext();
+  }, [scanSymlinks, scanProjects, scanPlugins, scanContext]);
+
   useEffectApp(() => { localStorage.setItem('atlas.tab', tab); }, [tab]);
+
+  // Re-scan when switching tabs (Decision 5: no cache, fresh data each time).
+  // Skip the very first render because mount effect already scans everything.
+  const didMountTab = useRefApp(false);
+  useEffectApp(() => {
+    if (!didMountTab.current) { didMountTab.current = true; return; }
+    if (tab === 'symlinks') scanSymlinks();
+    else if (tab === 'projects') scanProjects();
+    else if (tab === 'plugins') scanPlugins();
+    else if (tab === 'context') scanContext();
+  }, [tab, scanSymlinks, scanProjects, scanPlugins, scanContext]);
 
   const activeData = tweaks.dataState === 'empty' ? emptyData() : data;
 
@@ -95,11 +182,19 @@ function App() {
     setLoading(prev => ({ ...prev, [tabKey]: true }));
     const tabName = t(`nav.${tabKey}`);
     pushToast({ kind:'info', message: t('common.rescanning', { tab: tabName }) });
-    setTimeout(() => {
+    const scans = {
+      symlinks: scanSymlinks,
+      projects: scanProjects,
+      plugins: scanPlugins,
+      context: scanContext,
+    };
+    const runner = scans[tabKey];
+    const task = runner ? runner() : Promise.resolve();
+    Promise.resolve(task).finally(() => {
       setLoading(prev => ({ ...prev, [tabKey]: false }));
       pushToast({ kind:'ok', message: t('common.upToDate', { tab: tabName }) });
-    }, 900);
-  }, [pushToast, t]);
+    });
+  }, [pushToast, t, scanSymlinks, scanProjects, scanPlugins, scanContext]);
 
   const badges = useMemoApp(() => {
     const d = activeData.driftSummary;

@@ -34,6 +34,15 @@ fn is_noise(name: &str) -> bool {
     ) || name.starts_with('.')
 }
 
+fn severity_rank(state: &str) -> u8 {
+    match state {
+        "broken" => 0,
+        "drifted" => 1,
+        "unmanaged" => 2,
+        _ => 3,
+    }
+}
+
 #[tauri::command]
 pub fn scan_symlinks(
     claude_dir: String,
@@ -77,7 +86,11 @@ pub fn scan_symlinks(
         });
     }
 
-    entries.sort_by(|a, b| a.link_path.cmp(&b.link_path));
+    entries.sort_by(|a, b| {
+        severity_rank(a.state)
+            .cmp(&severity_rank(b.state))
+            .then_with(|| a.link_path.cmp(&b.link_path))
+    });
     Ok(entries)
 }
 
@@ -123,5 +136,48 @@ fn classify(
         }
     } else {
         (Some(canonical.to_string_lossy().to_string()), "unmanaged")
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn entry(link_path: &str, state: &'static str) -> SymlinkEntry {
+        SymlinkEntry {
+            link_path: link_path.to_string(),
+            target: None,
+            expected_source: None,
+            state,
+        }
+    }
+
+    #[test]
+    fn sort_severity_then_alpha() {
+        let mut entries = vec![
+            entry("/a/settings.json", "ok"),
+            entry("/a/CLAUDE.md", "broken"),
+            entry("/a/hooks", "drifted"),
+            entry("/a/agents", "unmanaged"),
+        ];
+        entries.sort_by(|a, b| {
+            severity_rank(a.state)
+                .cmp(&severity_rank(b.state))
+                .then_with(|| a.link_path.cmp(&b.link_path))
+        });
+        let order: Vec<&str> = entries.iter().map(|e| e.state).collect();
+        assert_eq!(order, vec!["broken", "drifted", "unmanaged", "ok"]);
+
+        let mut tie = vec![
+            entry("/z/file", "drifted"),
+            entry("/a/file", "drifted"),
+        ];
+        tie.sort_by(|a, b| {
+            severity_rank(a.state)
+                .cmp(&severity_rank(b.state))
+                .then_with(|| a.link_path.cmp(&b.link_path))
+        });
+        assert_eq!(tie[0].link_path, "/a/file");
+        assert_eq!(tie[1].link_path, "/z/file");
     }
 }
