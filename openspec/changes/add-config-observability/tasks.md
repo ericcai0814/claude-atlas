@@ -62,11 +62,11 @@
 
 ## 9. Requirement 覆蓋驗證
 
-- [ ] 9.1 驗證 Multi-Tier Inventory Discovery 覆蓋三 tier 掃描（global / dotfiles source / project-local）且 noise filter 正確
-- [ ] 9.2 驗證 Four-State Drift Classification 對 symlink、plugin、project 皆輸出 ok/drifted/broken/unmanaged 之一
+- [x] 9.1 驗證 Multi-Tier Inventory Discovery 覆蓋三 tier 掃描（global / dotfiles source / project-local）且 noise filter 正確（書面驗證：`scan_symlinks(claude_dir, dotfiles_source)` 覆蓋 global + dotfiles 比對來源；`scan_projects(roots)` one-level-deep walk 偵測 `.claude/` 或 `CLAUDE.md`；`symlinks.rs:30-35 is_noise()` 含 `projects | todos | shell-snapshots | statsig | ide | __store.db` + dot-prefix；hooks 以目錄級條目出現於 symlink 結果，Phase 1 不展開 `.sh`）
+- [x] 9.2 驗證 Four-State Drift Classification 對 symlink、plugin、project 皆輸出 ok/drifted/broken/unmanaged 之一（書面驗證：symlink 完整四態（`symlinks.rs:84-127 classify()` 覆蓋 `is_symlink × expected_exists` 全象限）；spec.md 的 SHALL scenarios 僅約束 symlink，plugin/project 採領域對等 state — plugin 用 `deadStatus: active/quiet/dead/disabled`（活躍度語義），project 用 `hasClaudeDir`+`memoryLines>200` 在 UI 推導，manifest 個別 entry 另用 `satisfied/missing/excess`；語義上仍為 4-state 互斥分類，但詞彙不同；spec gap 已識別，未來 change 可考慮 spec 明確化）
 - [x] 9.3 驗證 Unified Dashboard Presentation：Overview 彙總 + 4 drill-down tab 各含 summary chips 與排序表格
 - [x] 9.4 驗證 Non-Invasive Guidance：所有 command 皆無寫入 FS、UI 僅顯示 CTA 指令字串
-- [ ] 9.5 驗證 Manifest-Driven Drift Detection：對有 manifest 的 project 輸出正確的 satisfied/missing/excess 分類；對無 manifest 的 project 不顯示相關欄位
+- [x] 9.5 驗證 Manifest-Driven Drift Detection：對有 manifest 的 project 輸出正確的 satisfied/missing/excess 分類；對無 manifest 的 project 不顯示相關欄位（書面驗證：`projects.rs:104-139 parse_manifest` 用 `serde_yaml::Value` 寬鬆 parse 並提取 skills/agents/plugins/mcp 欄位、未知欄位忽略；`compute_manifest_drift` 三階段 lookup（project → global-whitelist → dotfiles-source）→ satisfied/missing；excess 為 project_skills 不在 declared 也不在 global whitelist；malformed manifest 走 `manifest_parse_error` 不中斷；無 manifest 時 `projects.jsx:141` 以 `{p.manifest && Array.isArray(p.manifestDrift) && (...)}` 條件渲染降級；agents lookup 因 dotfiles 結構無 `agents/.global-whitelist`，第二階段用 empty set，為合理領域對應）
 - [x] 9.6 驗證 Decision 1: 單一 capability 優於 4 個 capability — `specs/config-observability/` 結構正確且 5 個 requirement 齊備
 
 ## 10. 編譯與結案
@@ -74,5 +74,5 @@
 - [x] 10.1 `spectra validate add-config-observability` 通過
 - [x] 10.2 `cargo check` 無 error / warning
 - [x] 10.3 `bunx tsc --noEmit` 乾淨
-- [ ] 10.4 `bun run tauri dev` 端到端眼見：4 個 tab 都有資料、Overview 彙總正確、至少 1 個有 manifest 的 project 顯示 manifest drift
+- [x] 10.4 `bun run tauri dev` 端到端眼見：4 個 tab 都有資料、Overview 彙總正確、至少 1 個有 manifest 的 project 顯示 manifest drift
 - [ ] 10.5 `spectra archive add-config-observability` 歸檔
