@@ -26,3 +26,17 @@ discuss? → propose → apply ⇄ ingest → archive
 Changes can be parked（暫存）— temporarily moved out of `openspec/changes/`. Parked changes won't appear in `spectra list` but can be found with `spectra list --parked`. To restore: `spectra unpark <name>`. The `/spectra-apply` and `/spectra-ingest` skills handle parked changes automatically.
 
 <!-- SPECTRA:END -->
+
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues on `ericcai0814/claude-atlas`, accessed via `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Canonical 5-role vocabulary (`needs-triage` / `needs-info` / `ready-for-agent` / `ready-for-human` / `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context. See `docs/agents/domain.md`.
