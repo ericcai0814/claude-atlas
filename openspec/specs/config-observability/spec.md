@@ -39,13 +39,31 @@ The inventory SHALL exclude runtime and auxiliary directories that are not user-
 - **WHEN** scanning `~/.claude/`
 - **THEN** entries named `projects`, `todos`, `shell-snapshots`, `statsig`, `ide`, or starting with `.` SHALL NOT appear in the inventory
 
+#### Scenario: Hook .sh files are enumerated at file level
+
+- **WHEN** the inventory scan encounters `~/.claude/hooks/` or `~/dotfiles/claude/hooks/`
+- **THEN** each `.sh` file under those directories SHALL appear as a distinct inventory entry
+- **AND** each entry SHALL carry the same fields as a symlink entry: link path, resolved target (or canonical path for regular files), expected source from the dotfiles tier, and a four-state drift classification
+
+##### Example: hook file enumeration
+
+- **GIVEN** `~/.claude/hooks/stop.sh` is a symlink resolving to `~/dotfiles/claude/hooks/stop.sh`
+- **AND** `~/.claude/hooks/orphan.sh` is a regular file with no counterpart under `~/dotfiles/claude/hooks/`
+- **WHEN** the inventory scan runs
+- **THEN** `stop.sh` appears as one entry with state `ok`
+- **AND** `orphan.sh` appears as one entry with state `unmanaged`
+
 
 <!-- @trace
-source: add-config-observability
-updated: 2026-05-10
+source: add-phase2-refinements
+updated: 2026-05-11
 code:
-  - .spectra.yaml
-  - CLAUDE.md
+  - src-tauri/Cargo.toml
+  - src-tauri/src/commands/plugins.rs
+  - src-tauri/src/commands/hooks.rs
+  - src-tauri/src/commands/symlinks.rs
+  - src-tauri/src/lib.rs
+  - src-tauri/src/commands/mod.rs
 -->
 
 ---
@@ -122,13 +140,33 @@ The dashboard SHALL re-scan its data source when the user switches to a tab and 
 - **WHEN** the user switches away from a tab and then returns to it
 - **THEN** the system re-invokes its underlying scan command and renders fresh data
 
+#### Scenario: Plugins tab applies dead-status severity sort
+
+- **WHEN** the system returns the plugin list for the Plugins tab
+- **THEN** entries SHALL appear in dead-status severity order: `dead` first, then `quiet`, then `active`, then `disabled`
+- **AND** entries within the same dead-status group SHALL appear in alphabetical order by plugin name
+
+##### Example: plugins severity ordering
+
+| dead_status | plugin name | sort position |
+| ----------- | ----------- | ------------- |
+| dead        | alpha       | 1             |
+| dead        | zebra       | 2             |
+| quiet       | beta        | 3             |
+| active      | gamma       | 4             |
+| disabled    | delta       | 5             |
+
 
 <!-- @trace
-source: add-config-observability
-updated: 2026-05-10
+source: add-phase2-refinements
+updated: 2026-05-11
 code:
-  - .spectra.yaml
-  - CLAUDE.md
+  - src-tauri/Cargo.toml
+  - src-tauri/src/commands/plugins.rs
+  - src-tauri/src/commands/hooks.rs
+  - src-tauri/src/commands/symlinks.rs
+  - src-tauri/src/lib.rs
+  - src-tauri/src/commands/mod.rs
 -->
 
 ---

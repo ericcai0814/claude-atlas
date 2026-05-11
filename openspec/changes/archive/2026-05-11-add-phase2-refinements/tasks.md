@@ -11,5 +11,5 @@
 
 ## 3. Regression verification
 
-- [ ] 3.1 跑 full `cd src-tauri && cargo test` 與 `cd src-tauri && cargo check`，確保既有 symlinks / projects / plugins / context module 測試與 Phase 1 commit `c9738e7` 引入的 symlinks severity ordering test 全部維持綠燈；驗證：兩個指令 exit code 0、test 報告無 FAILED line
-- [ ] 3.2 跑 `spectra verify add-phase2-refinements`，確認 R1 + R3 的新 scenarios 被歸類為 satisfied；驗證：spectra verify 報告對 "Multi-Tier Inventory Discovery" 與 "Unified Dashboard Presentation" 兩 requirement 不再標出原本的 W1 hooks file-level / plugins severity sort gap
+- [x] 3.1 跑 full `cd src-tauri && cargo test` 與 `cd src-tauri && cargo check`，確保既有 symlinks / projects / plugins / context module 測試與 Phase 1 commit `c9738e7` 引入的 symlinks severity ordering test 全部維持綠燈；驗證：兩個指令 exit code 0、test 報告無 FAILED line
+- [x] 3.2 跑 `spectra verify add-phase2-refinements`，確認 R1 + R3 的新 scenarios 被歸類為 satisfied；驗證：spectra verify 報告對 "Multi-Tier Inventory Discovery" 與 "Unified Dashboard Presentation" 兩 requirement 不再標出原本的 W1 hooks file-level / plugins severity sort gap
