@@ -34,7 +34,7 @@ fn is_noise(name: &str) -> bool {
     ) || name.starts_with('.')
 }
 
-fn severity_rank(state: &str) -> u8 {
+pub(crate) fn severity_rank(state: &str) -> u8 {
     match state {
         "broken" => 0,
         "drifted" => 1,
@@ -94,7 +94,7 @@ pub fn scan_symlinks(
     Ok(entries)
 }
 
-fn classify(
+pub(crate) fn classify(
     path: &Path,
     is_symlink: bool,
     expected: &Path,
